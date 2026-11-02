@@ -1,0 +1,99 @@
+[mod]
+id = "horizon_skin"
+version = "1.0.0"
+priority = 100
+
+# The commit it was tested on. It uses only the native hook points (hooks 35
+# in compatibility.json): the launcher builds it on any Horizon that has them.
+[compatibility]
+horizon_revision = "d91cab68ded29bd2b004f7050c468fb98c41a00b"
+
+# runtime.rs becomes the module crate::game::horizon_skin.
+[[module]]
+id = "runtime"
+file = "crates/horizon-client/src/game.rs"
+name = "horizon_skin"
+source = "runtime.rs"
+
+# The local player's UUID and the mod's skin location, shared with the
+# renderer's default_skin (another crate).
+[[module]]
+id = "hub"
+file = "crates/horizon-client-render/src/tab_list.rs"
+name = "horizon_skin_hub"
+source = "hub.rs"
+visibility = "pub"
+
+[[injection]]
+id = "frame"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_frame"
+helper = "frame.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+]
+
+# Every skin the game could not resolve falls back to DefaultPlayerSkin.get
+# (`PlayerInfo.getSkin`). Answering for the local player with the mod's skin
+# makes the body, the arm and both inventory previews wear it, with no reset
+# to fight: the fallback itself is ours.
+[[injection]]
+id = "default-skin"
+kind = "HEAD"
+target = "horizon_client_render::tab_list::default_skin"
+helper = "default_skin.rs"
+cancellable = true
+bindings = [
+  { name = "uuid", ty = "u128", value = "uuid" },
+]
+
+[[injection]]
+id = "command"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_command"
+helper = "command.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "command", ty = "&str", value = "command" },
+  { name = "ran", ty = "&mut bool", value = "&mut *ran" },
+]
+
+[[injection]]
+id = "commands"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_commands"
+helper = "commands.rs"
+bindings = [
+  { name = "commands", ty = "&mut Vec<&'static str>", value = "&mut *commands" },
+]
+
+[[injection]]
+id = "list"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_mods"
+helper = "list.rs"
+bindings = [
+  { name = "mods", ty = "&mut Vec<crate::game::native_hooks::NativeMod>", value = "&mut *mods" },
+]
+
+[[injection]]
+id = "settings"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_settings"
+helper = "settings.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "mod_id", ty = "&str", value = "mod_id" },
+  { name = "buttons", ty = "&mut Vec<String>", value = "&mut *buttons" },
+]
+
+[[injection]]
+id = "click"
+kind = "HEAD"
+target = "horizon_client::game::native_hooks::Game<'_>::native_settings_click"
+helper = "click.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "mod_id", ty = "&str", value = "mod_id" },
+  { name = "button", ty = "usize", value = "button" },
+]

@@ -1,0 +1,10 @@
+[package]
+name = "horizon-mod-custom-skin"
+version = "1.0.0"
+edition = "2024"
+publish = false
+description = "Custom Skin, a native mod for Horizon: wear your own 64x64 skin PNG."
+
+# The mod's logic and its tests: the same file the bundle adds to the game.
+[lib]
+path = "mixins/horizon_skin/runtime.rs"
